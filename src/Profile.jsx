@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "./api"; // use axios instance with base URL
 
 const Profile = () => {
   const { user, token, logout, updateUser } = useAuth();
@@ -12,6 +12,7 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user || !token) {
@@ -21,17 +22,17 @@ const Profile = () => {
 
     const fetchProfile = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/profile", {
+        const response = await API.get("/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         setName(response.data.name);
         setEmail(response.data.email);
-        updateUser(response.data); // Update context
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-        setStatus(" load profile.");
+        updateUser(response.data);
+      } catch (err) {
+        console.error("Fetch profile error:", err);
+        setError("Failed to load profile.");
       } finally {
         setLoading(false);
       }
@@ -41,22 +42,30 @@ const Profile = () => {
   }, [user, token, navigate, updateUser]);
 
   const handleSave = async () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Name cannot be empty.");
+      return;
+    }
+
     try {
-      const response = await axios.put(
-        "http://localhost:5000/api/profile",
-        { name },
+      const response = await API.put(
+        "/profile",
+        { name: trimmedName },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      updateUser({ ...user, name }); // Merge updated name
-      setEditing(false);
+      updateUser({ ...user, name: trimmedName });
       setStatus("Profile updated successfully.");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      setStatus("Failed to update profile.");
+      setError("");
+      setEditing(false);
+    } catch (err) {
+      console.error("Update profile error:", err);
+      setError("Failed to update profile.");
+      setStatus("");
     }
   };
 
@@ -69,23 +78,24 @@ const Profile = () => {
 
   return (
     <div className="max-w-lg mx-auto p-6 bg-white rounded-xl shadow-lg mt-10">
-      <h2 className="text-2xl font-semibold mb-4 text-center text-blue-600">My Profile</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-blue-600">My Profile</h2>
 
-      {status && <div className="mb-4 text-sm text-green-600">{status}</div>}
+      {status && <div className="mb-4 text-green-600 text-sm">{status}</div>}
+      {error && <div className="mb-4 text-red-600 text-sm">{error}</div>}
 
       <div className="mb-4">
         <label className="block text-gray-700 font-medium">Email:</label>
         <p className="text-gray-900">{email}</p>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-6">
         <label className="block text-gray-700 font-medium">Name:</label>
         {editing ? (
           <input
             type="text"
-            className="w-full border border-gray-300 p-2 rounded"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value.trimStart())}
+            className="w-full border border-gray-300 p-2 rounded"
           />
         ) : (
           <p className="text-gray-900">{name}</p>
@@ -94,7 +104,7 @@ const Profile = () => {
 
       <div className="flex justify-between items-center">
         {editing ? (
-          <>
+          <div className="flex gap-3">
             <button
               onClick={handleSave}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -102,12 +112,15 @@ const Profile = () => {
               Save
             </button>
             <button
-              onClick={() => setEditing(false)}
+              onClick={() => {
+                setEditing(false);
+                setName(user?.name || "");
+              }}
               className="text-gray-500 underline"
             >
               Cancel
             </button>
-          </>
+          </div>
         ) : (
           <button
             onClick={() => setEditing(true)}
@@ -119,7 +132,7 @@ const Profile = () => {
 
         <button
           onClick={handleLogout}
-          className="text-red-600 underline ml-4"
+          className="text-red-600 underline"
         >
           Logout
         </button>

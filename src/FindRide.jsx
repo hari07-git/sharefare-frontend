@@ -1,96 +1,158 @@
 // src/FindRide.jsx
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import rideSearchImg from "./assets/find-ride.png";
+import { useAuth } from "./context/AuthContext";
+import API from "./api"; // axios instance with base URL
 
 const FindRide = () => {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [date, setDate] = useState("");
+  const [form, setForm] = useState({
+    source: "",
+    destination: "",
+    date: "",
+  });
+
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { token } = useAuth();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSearch = async () => {
-    if (!from || !to || !date) {
-      setError("Please fill all fields.");
+    const { source, destination, date } = form;
+
+    if (!source.trim() || !destination.trim() || !date) {
+      setError("Please fill in all fields.");
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setResults([]);
-
     try {
-      const res = await fetch(
-        `http://127.0.0.1:5000/api/search?from=${from}&to=${to}&date=${date}`
+      const res = await API.post(
+        "/search",
+        { source: source.trim(), destination: destination.trim(), date },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      const data = await res.json();
-      setResults(data);
+
+      setResults(res.data.rides || []);
+      setError("");
     } catch (err) {
-      console.error(err);
-      setError("Failed to fetch rides. Please try again later.");
-    } finally {
-      setLoading(false);
+      console.error("Search error:", err);
+      setError("Failed to search rides. Please try again later.");
+      setResults([]);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16 text-gray-900">
-      <h1 className="text-3xl font-bold text-center mb-10">Find a Ride</h1>
+    <div className="text-gray-800">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 px-6 text-center">
+        <h1 className="text-4xl font-bold mb-2">Find a Ride</h1>
+        <p className="text-lg">Search for available rides from your peers.</p>
+      </div>
 
       {/* Search Form */}
-      <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8 border border-gray-200 mb-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="max-w-3xl mx-auto mt-10 px-4">
+        <div className="bg-white p-6 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
+            name="source"
+            value={form.source}
+            onChange={handleChange}
             placeholder="From"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-3 border rounded"
           />
           <input
             type="text"
+            name="destination"
+            value={form.destination}
+            onChange={handleChange}
             placeholder="To"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-3 border rounded"
           />
           <input
             type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            name="date"
+            value={form.date}
+            onChange={handleChange}
+            className="p-3 border rounded"
           />
           <button
             onClick={handleSearch}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+            className="md:col-span-3 mt-4 w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition"
           >
             Search
           </button>
         </div>
 
         {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
-        {loading && <p className="text-blue-600 mt-4 text-center">Searching for rides...</p>}
       </div>
 
       {/* Ride Results */}
-      <div className="grid gap-4">
-        {results.length === 0 && !loading && (
-          <p className="text-center text-gray-500">No rides found for your search.</p>
-        )}
-        {results.map((ride) => (
-          <div
-            key={ride.id}
-            className="p-4 border border-gray-200 rounded-xl shadow-sm bg-white hover:shadow-md transition"
-          >
-            <p className="text-lg font-semibold text-gray-800">
-              {ride.source} → {ride.destination}
-            </p>
-            <p className="text-sm text-gray-600">
-              {ride.date} — ₹{ride.price} — By {ride.driver}
-            </p>
+      <div className="max-w-4xl mx-auto mt-10 px-4">
+        {results.length > 0 ? (
+          <div className="space-y-4">
+            {results.map((ride, index) => (
+              <div
+                key={index}
+                className="bg-white p-4 shadow-md rounded border hover:shadow-lg transition"
+              >
+                <h2 className="text-xl font-semibold mb-2">
+                  {ride.source} → {ride.destination}
+                </h2>
+                <p>Date: {ride.date}</p>
+                <p>Time: {ride.time}</p>
+                <p>Price: ₹{ride.price}</p>
+                {ride.driver && <p>Driver: {ride.driver}</p>}
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          !error && (
+            <p className="text-center text-gray-600 mt-6">
+              No rides found for the selected route and date.
+            </p>
+          )
+        )}
       </div>
+
+      {/* Navigation */}
+      <div className="flex justify-center gap-4 mt-10">
+        <Link
+          to="/"
+          className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition"
+        >
+          ← Back to Home
+        </Link>
+        <Link
+          to="/offer"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+        >
+          Offer a Ride →
+        </Link>
+      </div>
+
+      {/* Visual */}
+      <div className="mt-16">
+        <img
+          src={rideSearchImg}
+          alt="Find Ride"
+          className="w-full max-w-4xl mx-auto rounded-lg shadow-lg"
+        />
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-6 mt-16">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p>© {new Date().getFullYear()} ShareFare. All rights reserved.</p>
+          <p className="text-sm">Made for students, by students.</p>
+        </div>
+      </footer>
     </div>
   );
 };

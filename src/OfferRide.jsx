@@ -20,6 +20,8 @@ const OfferRide = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
+  const apiUrl = `${import.meta.env.VITE_API_URL}/api/offer`;
+
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
@@ -37,7 +39,7 @@ const OfferRide = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/offer", {
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,7 +49,6 @@ const OfferRide = () => {
       });
 
       if (res.status === 401) {
-        // Token expired or invalid
         logout();
         navigate("/login");
         return;
@@ -59,7 +60,14 @@ const OfferRide = () => {
       }
 
       setSuccess("✅ Ride offered successfully!");
-      setForm({ source: "", destination: "", date: "", time: "", price: "", driver: "" });
+      setForm({
+        source: "",
+        destination: "",
+        date: "",
+        time: "",
+        price: "",
+        driver: "",
+      });
     } catch (err) {
       setError(err.message);
     } finally {

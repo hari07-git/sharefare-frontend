@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "./context/AuthContext"; // Correct path
-import loginImg from "./assets/login-ride.png";   // Adjusted path if needed
+import { useAuth } from "./context/AuthContext";
+import loginImg from "./assets/login-ride.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,19 +12,29 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value.trimStart() });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const { email, password } = form;
+
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in both email and password.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/login", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+      const res = await fetch(`${apiUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
       let data;
@@ -35,6 +45,9 @@ const Login = () => {
       }
 
       if (!res.ok) {
+        if (import.meta.env.MODE === "development") {
+          console.error("Login failed:", data);
+        }
         throw new Error(data?.error || "Login failed");
       }
 

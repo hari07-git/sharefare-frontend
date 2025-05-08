@@ -1,9 +1,7 @@
-// src/pages/Register.jsx
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import API from "./api"; // use the axios instance
+import API from "./api"; // axios instance
 import registerImg from "./assets/register-ride.png";
 
 const Register = () => {
@@ -20,38 +18,41 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value.trimStart() });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const name = form.name.trim();
+    const email = form.email.trim();
+    const password = form.password;
+
+    if (!name || !email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
     setLoading(true);
 
-    const cleanForm = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password,
-    };
-
     try {
-      // Step 1: Register user
-      const res = await API.post("/register", cleanForm);
+      // Step 1: Register
+      const res = await API.post("/register", { name, email, password });
 
-      if (!res.data || !res.data.message) {
-        throw new Error("Unexpected response from server");
+      if (!res.data?.message) {
+        throw new Error("Unexpected response from server.");
       }
 
       // Step 2: Auto-login
-      const loginRes = await API.post("/login", {
-        email: cleanForm.email,
-        password: cleanForm.password,
-      });
+      const loginRes = await API.post("/login", { email, password });
 
       login(loginRes.data.user, loginRes.data.token);
       navigate("/profile");
-
     } catch (err) {
+      if (import.meta.env.MODE === "development") {
+        console.error("Register error:", err.response || err);
+      }
       setError(err.response?.data?.error || err.message || "Something went wrong.");
     } finally {
       setLoading(false);
