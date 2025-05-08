@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import API from "./api"; // use the axios instance
 import registerImg from "./assets/register-ride.png";
 
 const Register = () => {
@@ -34,43 +35,24 @@ const Register = () => {
     };
 
     try {
-      // Step 1: Register the user
-      const res = await fetch("http://127.0.0.1:5000/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cleanForm),
+      // Step 1: Register user
+      const res = await API.post("/register", cleanForm);
+
+      if (!res.data || !res.data.message) {
+        throw new Error("Unexpected response from server");
+      }
+
+      // Step 2: Auto-login
+      const loginRes = await API.post("/login", {
+        email: cleanForm.email,
+        password: cleanForm.password,
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Unexpected server response during registration");
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Registration failed");
-      }
-
-      // Step 2: Auto-login after registration
-      const loginRes = await fetch("http://127.0.0.1:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanForm.email, password: cleanForm.password }),
-      });
-
-      const loginData = await loginRes.json();
-
-      if (!loginRes.ok) {
-        throw new Error(loginData?.error || "Login after register failed");
-      }
-
-      // Step 3: Save to context and redirect
-      login(loginData.user, loginData.token);
+      login(loginRes.data.user, loginRes.data.token);
       navigate("/profile");
 
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(err.response?.data?.error || err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
