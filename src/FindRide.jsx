@@ -1,19 +1,14 @@
-// src/FindRide.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import rideSearchImg from "./assets/find-ride.png";
 import { useAuth } from "./context/AuthContext";
-import API from "./api"; // axios instance with base URL
+import API from "./api";
 
 const FindRide = () => {
-  const [form, setForm] = useState({
-    source: "",
-    destination: "",
-    date: "",
-  });
-
+  const [form, setForm] = useState({ source: "", destination: "", date: "" });
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
+  const [searched, setSearched] = useState(false);
   const { token } = useAuth();
 
   const handleChange = (e) => {
@@ -32,19 +27,21 @@ const FindRide = () => {
       const res = await API.post(
         "/search",
         { source: source.trim(), destination: destination.trim(), date },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        token
+          ? {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          : {}
       );
 
       setResults(res.data.rides || []);
       setError("");
+      setSearched(true);
     } catch (err) {
       console.error("Search error:", err);
-      setError("Failed to search rides. Please try again later.");
+      setError("Failed to search rides. Please try again.");
       setResults([]);
+      setSearched(true);
     }
   };
 
@@ -113,6 +110,7 @@ const FindRide = () => {
             ))}
           </div>
         ) : (
+          searched &&
           !error && (
             <p className="text-center text-gray-600 mt-6">
               No rides found for the selected route and date.

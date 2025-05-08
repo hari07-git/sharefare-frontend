@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import API from "./api"; // axios instance
+import API from "./api"; // axios instance with baseURL
 import registerImg from "./assets/register-ride.png";
 
 const Register = () => {
@@ -18,7 +18,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value.trimStart() });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -26,7 +26,7 @@ const Register = () => {
     setError("");
 
     const name = form.name.trim();
-    const email = form.email.trim();
+    const email = form.email.trim().toLowerCase();
     const password = form.password;
 
     if (!name || !email || !password) {
@@ -40,20 +40,24 @@ const Register = () => {
       // Step 1: Register
       const res = await API.post("/register", { name, email, password });
 
-      if (!res.data?.message) {
+      if (!res.data?.message && !res.data?.success) {
         throw new Error("Unexpected response from server.");
       }
 
       // Step 2: Auto-login
       const loginRes = await API.post("/login", { email, password });
 
-      login(loginRes.data.user, loginRes.data.token);
+      const { user, token } = loginRes.data;
+      if (!user || !token) {
+        throw new Error("Login failed after registration.");
+      }
+
+      login(user, token);
       navigate("/profile");
     } catch (err) {
-      if (import.meta.env.MODE === "development") {
-        console.error("Register error:", err.response || err);
-      }
-      setError(err.response?.data?.error || err.message || "Something went wrong.");
+      console.error("Registration error:", err);
+      const msg = err.response?.data?.error || err.message || "Registration failed. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -61,7 +65,7 @@ const Register = () => {
 
   return (
     <div className="flex flex-col min-h-screen text-gray-800">
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white py-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">Join ShareFare</h1>
         <p className="text-lg mb-6">Register to start sharing or finding rides easily</p>
