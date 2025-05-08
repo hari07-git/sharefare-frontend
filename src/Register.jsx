@@ -37,15 +37,15 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Step 1: Register
-      const res = await API.post("/register", { name, email, password });
+      // ✅ Corrected route with /api prefix
+      const res = await API.post("/api/register", { name, email, password });
 
       if (!res.data?.message && !res.data?.success) {
         throw new Error("Unexpected response from server.");
       }
 
-      // Step 2: Auto-login
-      const loginRes = await API.post("/login", { email, password });
+      // ✅ Login after successful registration
+      const loginRes = await API.post("/api/login", { email, password });
 
       const { user, token } = loginRes.data;
       if (!user || !token) {
@@ -56,7 +56,8 @@ const Register = () => {
       navigate("/profile");
     } catch (err) {
       console.error("Registration error:", err);
-      const msg = err.response?.data?.error || err.message || "Registration failed. Please try again.";
+      const msg =
+        err.response?.data?.error || err.message || "Registration failed. Please try again.";
       setError(msg);
     } finally {
       setLoading(false);
