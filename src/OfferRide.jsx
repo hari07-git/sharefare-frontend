@@ -1,4 +1,4 @@
-// src/OfferRide.jsx
+// src/OfferRide.jsx-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import offerRideImg from "./assets/ride-sharing.png";

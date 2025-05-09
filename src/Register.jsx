@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import API from "./api"; // axios instance with baseURL
 import registerImg from "./assets/register-ride.png";
-
+//hi
 const Register = () => {
   const navigate = useNavigate();
   const { login } = useAuth();

@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout";
-
+//hi there
 import Home from "./Home";
 import Login from "./Login";
 import Register from "./Register";
