@@ -1,43 +1,34 @@
-// src/context/AuthContext.jsx
+// AuthContext.jsx
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import React, { createContext, useState, useEffect, useContext } from "react";
-
-// 1. Create context
 const AuthContext = createContext();
 
-// 2. Provider component
 export const AuthProvider = ({ children }) => {
-  const getStoredUser = () => {
-    try {
-      const stored = localStorage.getItem("user");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      localStorage.removeItem("user");
-      return null;
-    }
-  };
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
-  const [user, setUser] = useState(getStoredUser);
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
-  const [loading, setLoading] = useState(true);
-
-  // Simulate loading (token validation logic can be added here)
+  // Restore user and token from localStorage on load
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 200);
-    return () => clearTimeout(timer);
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
+
+    if (savedUser && savedToken) {
+      try {
+        setUser(JSON.parse(savedUser));
+        setToken(savedToken);
+      } catch (err) {
+        console.error("Failed to parse user from localStorage", err);
+      }
+    }
   }, []);
 
-  // Login handler
-  const login = (userData, jwt) => {
+  const login = (userData, authToken) => {
     setUser(userData);
-    setToken(jwt);
+    setToken(authToken);
     localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", jwt);
+    localStorage.setItem("token", authToken);
   };
 
-  // Logout handler
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -45,18 +36,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
   };
 
-  // Update user data in state and localStorage
-  const updateUser = (newUserData) => {
-    setUser(newUserData);
-    localStorage.setItem("user", JSON.stringify(newUserData));
+  const updateUser = (updatedData) => {
+    setUser(updatedData);
+    localStorage.setItem("user", JSON.stringify(updatedData));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// 3. Hook to use auth context
 export const useAuth = () => useContext(AuthContext);
