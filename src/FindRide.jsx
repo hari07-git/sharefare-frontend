@@ -24,15 +24,14 @@ const FindRide = () => {
     }
 
     try {
-      const res = await API.post(
-        "/search",
-        { source: source.trim(), destination: destination.trim(), date },
-        token
-          ? {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          : {}
-      );
+      const res = await API.get("/search", {
+        params: {
+          source: source.trim(),
+          destination: destination.trim(),
+          date,
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
 
       setResults(res.data.rides || []);
       setError("");
@@ -154,5 +153,5 @@ const FindRide = () => {
     </div>
   );
 };
-//hi there
+
 export default FindRide;
