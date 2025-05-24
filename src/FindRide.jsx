@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import rideSearchImg from "./assets/find-ride.png";
 import { useAuth } from "./context/AuthContext";
 import API from "./api";
+import RideCard from "./components/RideCard"; // ✅ Import the RideCard component
 
 const FindRide = () => {
   const [form, setForm] = useState({ source: "", destination: "", date: "" });
@@ -94,18 +95,7 @@ const FindRide = () => {
         {results.length > 0 ? (
           <div className="space-y-4">
             {results.map((ride, index) => (
-              <div
-                key={index}
-                className="bg-white p-4 shadow-md rounded border hover:shadow-lg transition"
-              >
-                <h2 className="text-xl font-semibold mb-2">
-                  {ride.source} → {ride.destination}
-                </h2>
-                <p>Date: {ride.date}</p>
-                <p>Time: {ride.time}</p>
-                <p>Price: ₹{ride.price}</p>
-                {ride.driver && <p>Driver: {ride.driver}</p>}
-              </div>
+              <RideCard key={index} ride={ride} />
             ))}
           </div>
         ) : (
