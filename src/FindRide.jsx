@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import rideSearchImg from "../assets/find-ride.png";
-import { useUser } from "../UserContext"; // Corrected import
+import { useUser } from "../UserContext";
 import API from "../api";
 import RideCard from "../components/RideCard";
 
@@ -10,7 +10,7 @@ const FindRide = () => {
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
-  const { user } = useUser(); // Access user from context
+  const { user } = useUser();
   const token = user?.token;
 
   const handleChange = (e) => {
@@ -28,8 +28,8 @@ const FindRide = () => {
     try {
       const res = await API.get("/search", {
         params: {
-          from: source.trim(),
-          to: destination.trim(),
+          source: source.trim(),        // ✅ FIXED
+          destination: destination.trim(), // ✅ FIXED
           date,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
