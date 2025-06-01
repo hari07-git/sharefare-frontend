@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import rideSearchImg from "../assets/find-ride.png";
+import findRideImage from "./assets/find-ride.png";
 import { useUser } from "../UserContext";
 import API from "../api";
 import RideCard from "../components/RideCard";
