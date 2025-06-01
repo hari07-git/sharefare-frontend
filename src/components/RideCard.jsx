@@ -1,47 +1,54 @@
-import { useContext } from "react";
-import { UserContext } from "../context/UserContext";
-import axios from "../api"; // your axios instance
-import { useNavigate } from "react-router-dom";
+// src/components/RideCard.jsx
+import React from "react";
+import { useUser } from "../UserContext";
+import API from "../api";
 
 const RideCard = ({ ride }) => {
-  const { user } = useContext(UserContext);
-  const navigate = useNavigate();
+  const { user } = useUser();
 
   const handleBook = async () => {
     if (!user) {
-      alert("Please login first.");
-      return navigate("/login");
+      alert("You must be logged in to book a ride.");
+      return;
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
+      const res = await API.post(
         "/book",
-        { ride_id: ride.id },
+        { ride_id: ride.id || ride._id },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${user.token}`,
           },
         }
       );
-      alert("Ride booked successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.error || "Booking failed");
+
+      if (res.data.success) {
+        alert("Ride booked successfully!");
+      } else {
+        alert("Failed to book ride. Please try again.");
+      }
+    } catch (err) {
+      console.error("Booking error:", err);
+      alert("An error occurred while booking.");
     }
   };
 
   return (
-    <div className="border p-4 rounded shadow mb-4 bg-white">
-      <h3 className="text-xl font-semibold">{ride.source} → {ride.destination}</h3>
-      <p>Date: {ride.date}</p>
-      <p>Price: ₹{ride.price}</p>
-      <p>Driver: {ride.driver}</p>
+    <div className="border rounded-lg p-4 shadow hover:shadow-md transition">
+      <div className="text-lg font-semibold">
+        {ride.source} → {ride.destination}
+      </div>
+      <div className="text-sm text-gray-600">Date: {ride.date}</div>
+      <div className="text-sm text-gray-600">Time: {ride.time}</div>
+      <div className="text-sm text-gray-600">Seats Available: {ride.seats}</div>
+      <div className="text-sm text-gray-600">Driver: {ride.driver_name}</div>
+
       <button
         onClick={handleBook}
-        className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
       >
-        Book My Ride
+        Book Ride
       </button>
     </div>
   );

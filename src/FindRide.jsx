@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import rideSearchImg from "./assets/find-ride.png";
-import { useAuth } from "./context/AuthContext";
-import API from "./api";
-import RideCard from "./components/RideCard"; // ✅ Import the RideCard component
+import rideSearchImg from "../assets/find-ride.png";
+import { useUser } from "../UserContext"; // Corrected import
+import API from "../api";
+import RideCard from "../components/RideCard";
 
 const FindRide = () => {
   const [form, setForm] = useState({ source: "", destination: "", date: "" });
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
-  const { token } = useAuth();
+  const { user } = useUser(); // Access user from context
+  const token = user?.token;
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,14 +28,14 @@ const FindRide = () => {
     try {
       const res = await API.get("/search", {
         params: {
-          source: source.trim(),
-          destination: destination.trim(),
+          from: source.trim(),
+          to: destination.trim(),
           date,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
-      setResults(res.data.rides || []);
+      setResults(res.data || []);
       setError("");
       setSearched(true);
     } catch (err) {
@@ -94,8 +95,8 @@ const FindRide = () => {
       <div className="max-w-4xl mx-auto mt-10 px-4">
         {results.length > 0 ? (
           <div className="space-y-4">
-            {results.map((ride, index) => (
-              <RideCard key={index} ride={ride} />
+            {results.map((ride) => (
+              <RideCard key={ride.id || ride._id} ride={ride} />
             ))}
           </div>
         ) : (
