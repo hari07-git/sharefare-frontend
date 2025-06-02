@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import findRideImage from "./assets/find-ride.png";
-import { useUser } from "../UserContext";
-import API from "../api";
-import RideCard from "../components/RideCard";
+import { useAuth } from "./context/AuthContext"; // ✅ Correct AuthContext import
+import API from "./api"; // ✅ API instance
+import RideCard from "./components/RideCard"; // ✅ Correct component path
 
 const FindRide = () => {
   const [form, setForm] = useState({ source: "", destination: "", date: "" });
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
-  const { user } = useUser();
-  const token = user?.token;
+
+  const { user, token } = useAuth(); // ✅ Auth context
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -28,11 +28,11 @@ const FindRide = () => {
     try {
       const res = await API.get("/search", {
         params: {
-          source: source.trim(),        // ✅ FIXED
-          destination: destination.trim(), // ✅ FIXED
+          source: source.trim(),
+          destination: destination.trim(),
           date,
         },
-        headers: token ? { Authorization: Bearer ${token} } : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {}, // ✅ Fixed template literal
       });
 
       setResults(res.data || []);
@@ -128,7 +128,7 @@ const FindRide = () => {
       {/* Visual */}
       <div className="mt-16">
         <img
-          src={rideSearchImg}
+          src={findRideImage}
           alt="Find Ride"
           className="w-full max-w-4xl mx-auto rounded-lg shadow-lg"
         />
