@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import findRideImage from "./assets/find-ride.png";
-import { useAuth } from "./context/AuthContext"; // ✅ Correct AuthContext import
-import API from "./api"; // ✅ API instance
-import RideCard from "./components/RideCard"; // ✅ Correct component path
+import { useAuth } from "./context/AuthContext"; // ✅ Correct AuthContext
+import API from "./api";
+import RideCard from "./components/RideCard";
 
 const FindRide = () => {
   const [form, setForm] = useState({ source: "", destination: "", date: "" });
@@ -32,7 +32,8 @@ const FindRide = () => {
           destination: destination.trim(),
           date,
         },
-        headers: token ? { Authorization: `Bearer ${token}` } : {}, // ✅ Fixed template literal
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+ // ✅ Fixed template literal
       });
 
       setResults(res.data || []);
